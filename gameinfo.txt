@@ -17,20 +17,69 @@
 	manual "https://github.com/Planimeter/hl2sb"
 
 
-	FileSystem
+FileSystem
 	{
-		SteamAppId				218		// GCF for Source SDK Base 2007
-		ToolsAppId				211		// Tools will load this (ie: source SDK caches) to get things like materials\debug, materials\editor, etc.
-
-		//Orange box sdk allows an extra appid to be defined here to mount additional content. 320 is HL2MP
-		AdditionalContentId			320
-		
+		SteamAppId				320
 
 		SearchPaths
 		{
-			Game				|gameinfo_path|.
-			Game				|all_source_engine_paths|hl2mp
-			Game				|all_source_engine_paths|hl2
+
+			// First, mount all user customizations.  This will search for VPKs and subfolders
+			// and mount them in alphabetical order.  The easiest way to distribute a mod is to
+			// pack up the custom content into a VPK.  To "install" a mod, just drop it in this
+			// folder.
+			//
+			// Note that this folder is scanned only when the game is booted.
+			game+mod			hl2sb/custom/*
+
+			// We search VPK files before ordinary folders, because most files will be found in
+			// VPK and we can avoid making thousands of file system calls to attempt to open files
+			// in folders where they don't exist.  (Searching a VPK is much faster than making an operating
+			// system call.)
+
+			game+mod 			|gameinfo_path|.
+			
+			game				|all_source_engine_paths|hl2/hl2_textures.vpk
+			game				|all_source_engine_paths|hl2/hl2_sound_vo_english.vpk
+			game				|all_source_engine_paths|hl2/hl2_sound_misc.vpk
+			game				|all_source_engine_paths|hl2/hl2_misc.vpk
+			game 				|all_source_engine_paths|hl2/hl2_pak.vpk
+			game				|all_source_engine_paths|hl2mp/hl2mp_english.vpk
+			game 				|all_source_engine_paths|hl2mp/hl2mp_pak.vpk
+			platform			|all_source_engine_paths|platform/platform_misc.vpk
+
+			// Now search loose files.  We'll set the directory containing the gameinfo.txt file
+			// as the first "mod" search path (after any user customizations).  This is also the one
+			// that's used when writing to the "mod" path.
+			mod+mod_write+default_write_path		|gameinfo_path|.
+
+			// Add the hl2sb directory as a game search path.  This is also where where writes
+			// to the "game" path go.
+			game+game_write		hl2sb
+
+			// Where the game's binaries are
+			gamebin				hl2sb/bin
+
+			// Last, mount in shared HL2 loose files
+			game				|all_source_engine_paths|hl2
+			game 				|all_source_engine_paths|hl2mp
+			game 				|all_source_engine_paths|hl2sb
+			platform			|all_source_engine_paths|platform
+
+			// Random files downloaded from gameservers go into a seperate directory, so
+			// that it's easy to keep those files segregated from the official game files
+			// or customizations intentially installed by the user.
+			//
+			// This directory is searched LAST.  If you visit a server and download
+			// a custom model, etc, we don't want that file to override the default
+			// game file indefinitely (after you have left the server).  Servers CAN have
+			// custom content that overrides the default game files, it just needs to be
+			// packed up in the .bsp file so that it will be mounted as a map search pack.
+			// The map search pack is mounted at the top of the search path list,
+			// but only while you are connected that server and on that map.
+			
+			game+download	hl2sb/download
+			game 	cstrike/download
 		}
 	}
 }
